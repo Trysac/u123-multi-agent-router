@@ -9,4 +9,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Implement multi-stage task routing with rules, lexical scoring, LLM classification, and cycle-safe handoffs.
 - Initial project structure from the factory utility template.

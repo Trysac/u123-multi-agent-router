@@ -1,20 +1,9 @@
 # Testing
 
-## Running
+## Implementation
 
-```sh
-uv run pytest --cov=multi_agent_router   # tests with coverage report
-uv run python scripts/check.py      # every gate, as CI and the factory run it
-```
+Tests are located in `tests/test_multi_agent_router.py`. We prioritize testing the public API and all observable outcomes (return values, specific `RouterError` codes).
 
-## Policy
-
-- Branch coverage of `src/multi_agent_router` must stay at or above 80 %; the gate fails below it.
-- Tests exercise the public API (`import multi_agent_router`) and assert every observable effect:
-  return values, raised exceptions and their messages.
-- Each bug fix starts with a failing test that reproduces it.
-- Tests are deterministic: no network, no wall clock, no dependence on test order.
-
-## Layout
-
-`tests/test_<module>.py` mirrors each public module. Shared fixtures go in `tests/conftest.py`.
+- **Logic Coverage**: Tests ensure deterministic behavior for rule matching, keyword-based scoring, and fallback triggering.
+- **Double/Mock Testing**: We use `RecordedLLM` and `FakeLLM` to simulate LLM interaction without network dependency or latency.
+- **Failure Cases**: Tests assert expected behavior when LLMs return invalid JSON, when handoffs fail, or when cyclic routing occurs.
