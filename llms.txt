@@ -1,16 +1,18 @@
 # multi-agent-router
 
-> Route tasks to specialist agents by rules, lexical intent scores and an optional LLM classifier, with fallback, explained decisions and bounded handoffs Python package `trysac-multi-agent-router`, import name `multi_agent_router`, MIT licensed,
-> Python >= 3.10, no runtime dependencies.
+Route tasks to specialist agents by rules, lexical intent scores, and optional LLM classifier. Python `multi_agent_router`, MIT licensed. No runtime dependencies.
 
-## Docs
+## Core API
 
-- [README](README.md): problem, install, usage example
-- [AGENTS](AGENTS.md): commands, folder map, conventions, limits
-- [Architecture](docs/ARCHITECTURE.md): shape of the package and its public API
-- [Testing](docs/TESTING.md): how to run and extend the tests
+- `Router(agents, rules, llm, fallback, ...)`: Logic engine.
+- `AgentSpec(name, description, keywords, handler)`: Definition.
+- `AgentReply`: Control handoffs or return text.
+- `classify(text)`: Returns `RouteDecision` (agent, stage, score, reason, candidates).
+- `dispatch(text)`: Returns `DispatchResult` (status, path, reply).
 
-## Optional
+## Routing Stages
 
-- [Stack](docs/STACK.md): tools used and discarded
-- [Changelog](CHANGELOG.md): release history
+1. Regex Rules (compiled, first match wins, score 1.0).
+2. Lexical Scoring (token overlap vs keyword sets, threshold/margin gating).
+3. LLM Stage (structured JSON output).
+4. Fallback (safe landing on failure).

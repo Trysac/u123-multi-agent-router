@@ -1,48 +1,43 @@
 # multi-agent-router
 
-[![PyPI version](https://img.shields.io/pypi/v/trysac-multi-agent-router)](https://pypi.org/project/trysac-multi-agent-router/)
-[![License: MIT](https://img.shields.io/pypi/l/trysac-multi-agent-router)](LICENSE)
-[![CI](https://github.com/Trysac/u123-multi-agent-router/actions/workflows/ci.yml/badge.svg)](https://github.com/Trysac/u123-multi-agent-router/actions/workflows/ci.yml)
+Route tasks to specialist agents using deterministic rules, lexical scoring, and an optional LLM classifier. This library provides explained routing decisions and bounded handoffs with a safe fallback mechanism.
 
-Route tasks to specialist agents by rules, lexical intent scores and an optional LLM classifier, with fallback, explained decisions and bounded handoffs
+## Installation
 
-## Problem
-
-Describe in two or three sentences the concrete problem this utility solves, who hits it, and what
-they do today without it. Replace this paragraph when the first real feature lands.
-
-## Install
-
-```sh
-pip install trysac-multi-agent-router
-# or
-uv add trysac-multi-agent-router
+```bash
+pip install multi-agent-router
 ```
-
-Requires Python 3.10 or newer. No runtime dependencies.
 
 ## Usage
 
 ```python
-import multi_agent_router
+from multi_agent_router import AgentReply, AgentSpec, Router
 
-# normalize() trims surrounding whitespace and lower-cases the text.
-print(multi_agent_router.normalize("  Hello World "))  # -> "hello world"
 
-# Blank input is rejected explicitly instead of returning an empty string.
-try:
-    multi_agent_router.normalize("   ")
-except ValueError as exc:
-    print(f"rejected: {exc}")
+class Handler:
+    def handle(self, task):
+        return AgentReply(text="done")
+
+
+billing = AgentSpec("billing", "Billing agent", ["invoice"], handler=Handler())
+general = AgentSpec("general", "Triage", handler=Handler())
+
+router = Router([billing, general], rules=[(r"\binvoice\b", "billing")], fallback="general")
+result = router.dispatch("Where is my invoice?")
+assert result.status == "ok" and result.reply.text == "done"
 ```
 
-## Documentation
+## Public API Summary
 
-- [Architecture](docs/ARCHITECTURE.md) and [decisions](docs/decisions/)
-- [Testing](docs/TESTING.md) and [security](docs/SECURITY.md)
-- [Project record](docs/PROJECT.md) and [stack](docs/STACK.md)
-- [Changelog](CHANGELOG.md) and [contributing guide](CONTRIBUTING.md)
+- `Router`: Main entry point. Coordinates classification and dispatch.
+- `AgentSpec`: Configuration for an agent (name, description, keywords, handler).
+- `AgentReply`: Handoff or text result returned by an agent handler.
+- `AgentPort`: Protocol for agent handlers.
+- `RouteDecision`: Explanation of why an agent was chosen (stage, score, candidates).
+- `DispatchResult`: Outcome of the dispatch process (path, reply, decision).
 
-## License
+## Why not LLM-only routers?
 
-[MIT](LICENSE) (c) 2026 Miguel Gomez
+Agent frameworks often rely on expensive LLM calls for every routing decision, which introduces latency and unpredictable failure modes. `multi-agent-router` uses deterministic signals (regex, lexical overlap) first and performs a single model call only when necessary, while maintaining fully transparent, explainable decisions at every stage.
+
+See `docs/SECURITY.md` for our security posture.

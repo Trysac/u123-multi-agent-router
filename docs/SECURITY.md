@@ -1,19 +1,16 @@
-# Security notes
+# Security Policy and Threat Model
 
-## Threat model
+`multi-agent-router` processes untrusted input in production environments. We enforce strict bounds to prevent resource exhaustion and data exposure.
 
-`trysac-multi-agent-router` is a pure library without I/O. The main risks are:
+## Threat Model
 
-- **Supply chain**: a compromised dependency or CI action. Mitigation: no runtime dependencies,
-  Dependabot weekly updates, actions pinned to major versions, minimal workflow permissions.
-- **Leaked secrets**: tokens committed by mistake. Mitigation: `gitleaks` runs in the local gates
-  and in CI; `.env` files are git-ignored.
-- **Untrusted input**: callers may pass hostile strings. Mitigation: validate input and fail with
-  explicit exceptions; never `eval`, `exec` or deserialize untrusted data.
+### 1. Resource Exhaustion (DoS)
+- **Input size**: Task text is hard-limited to 20,000 characters. Exceeding this triggers `RouterError('input_too_large')` before any processing occurs.
+- **Configuration limits**: Router configurations are bounded: maximum 100 agents, maximum 200 keywords per agent, and maximum 50 routing rules. `invalid_config` is raised if these limits are exceeded.
+- **Handoff cycles**: Dispatches are bounded by `max_handoffs` (default 3) to prevent infinite loops. Cycles trigger `handoff_cycle` status.
 
-## Publishing
+### 2. Prompt Injection
+- When delegating to an LLM, user task input is isolated within `<task>...</task>` XML-style tags. Inner `</task` substrings are escaped to `&lt;/task` to prevent the model from escaping the data block.
 
-Releases are published to PyPI with trusted publishing (OIDC) when available, never with a
-long-lived token stored in the repository.
-
-To report a vulnerability, see [SECURITY.md](../SECURITY.md).
+### 3. Data Leaks
+- Event telemetry emitted via `on_event` includes metadata (`stage`, `agent`, `reason`, `candidates`, `path`) but never includes the raw user task text, ensuring user data does not leak into monitoring logs.
