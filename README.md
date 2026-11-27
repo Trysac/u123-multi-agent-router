@@ -4,8 +4,10 @@ Route tasks to specialist agents using deterministic rules, lexical scoring, and
 
 ## Installation
 
+Not published to PyPI yet. Install it from GitHub:
+
 ```bash
-pip install multi-agent-router
+pip install "git+https://github.com/Trysac/u123-multi-agent-router"
 ```
 
 ## Usage
